@@ -9,6 +9,7 @@ from Geometry import Geometry
 class OpenGLWindow:
 
     def __init__(self):
+        self.viewRot = 0
         self.sun = None
         self.sunRot = 0
         self.earth = None
@@ -19,6 +20,7 @@ class OpenGLWindow:
         self.moonSpeed = 0.03
         self.colourLoc = None
         self.modelMatrixLoc = None
+        self.viewMatrixLoc = None
         self.textures = None
         self.clock = pg.time.Clock()
 
@@ -102,27 +104,36 @@ class OpenGLWindow:
             1, GL_FALSE, projectionMatrix
         )
         self.modelMatrixLoc = glGetUniformLocation(self.shader, "model")
+        self.viewMatrixLoc = glGetUniformLocation(self.shader, "view")
         print("Setup complete!")
 
 
     def render(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glUseProgram(self.shader)  # You may not need this line
-        self.sunRot += 0.05
-        if(self.sunRot > 360):
-            self.sunRot-=360
+        self.viewRot+=0.01
+        if(self.viewRot>360):
+            self.viewRot-=360
+        viewMatrix = pyrr.matrix44.create_identity()
+        viewMatrix = pyrr.matrix44.multiply(
+            m1=viewMatrix,
+            m2=pyrr.matrix44.create_from_y_rotation(np.radians(self.viewRot),dtype=np.float32)
+        )
+        viewMatrix = pyrr.matrix44.multiply(
+            m1=viewMatrix,
+            m2=pyrr.matrix44.create_look_at([0,0,3],[0,0,0],[0,1,0])
+        )
+        glUniformMatrix4fv(self.viewMatrixLoc, 1, GL_FALSE, viewMatrix)
+
         modelMatrix = pyrr.matrix44.create_identity(dtype=np.float32)
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
             m2 = pyrr.matrix44.create_from_scale([0.2,0.2,0.2],dtype=np.float32)
         )
+
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_y_rotation(np.radians(self.sunRot),dtype=np.float32)
-        )
-        modelMatrix = pyrr.matrix44.multiply(
-            m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_translation([0,0,-3],dtype=np.float32)
+            m2 = pyrr.matrix44.create_from_translation([0,0,0],dtype=np.float32)
         )
         glUniformMatrix4fv(self.modelMatrixLoc, 1, GL_FALSE, modelMatrix)
         glUniform3f(self.colourLoc, 1, 1, 1)
@@ -141,11 +152,7 @@ class OpenGLWindow:
         )
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_y_rotation(np.radians(self.sunRot),dtype=np.float32)
-        )
-        modelMatrix = pyrr.matrix44.multiply(
-            m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_translation([0,0.6,-3],dtype=np.float32)
+            m2 = pyrr.matrix44.create_from_translation([0,0.6,0],dtype=np.float32)
         )
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
@@ -167,15 +174,11 @@ class OpenGLWindow:
         )
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_y_rotation(np.radians(self.sunRot),dtype=np.float32)
-        )
-        modelMatrix = pyrr.matrix44.multiply(
-            m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_translation([0,0.8,-3],dtype=np.float32)
+            m2 = pyrr.matrix44.create_from_translation([0,0.8,0],dtype=np.float32)
         )  
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_translation([0,-0.6,3],dtype=np.float32)
+            m2 = pyrr.matrix44.create_from_translation([0,-0.6,0],dtype=np.float32)
         )
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
@@ -183,7 +186,7 @@ class OpenGLWindow:
         )
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
-            m2 = pyrr.matrix44.create_from_translation([0,0.6,-3],dtype=np.float32)
+            m2 = pyrr.matrix44.create_from_translation([0,0.6,0],dtype=np.float32)
         )
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
