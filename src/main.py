@@ -10,6 +10,9 @@ def main():
 	paused = False
 	earthSpeed = 0.01
 	moonSpeed = 0.03
+	xViewRot = 0
+	yViewRot = 0
+	zViewRot = 0
 	while running:
 		if(not(paused)):
 			window.render()
@@ -40,6 +43,40 @@ def main():
 					if moonSpeed < 0 :
 						moonSpeed = 0
 					window.setMoonSpeed(moonSpeed)
+				
+				if event.key == pg.K_d and not(paused):
+					yViewRot += 1
+					if(yViewRot > 360):
+						yViewRot-=360
+					window.setYRotation(yViewRot)
+				if event.key == pg.K_a and not(paused):
+					yViewRot -= 1
+					if(yViewRot < 0):
+						yViewRot+=360
+					window.setYRotation(yViewRot)
+
+				if event.key == pg.K_w and not(paused):
+					xViewRot += 1
+					if(xViewRot > 360):
+						xViewRot-=360
+					window.setXRotation(xViewRot)
+				if event.key == pg.K_s and not(paused):
+					xViewRot -= 1
+					if(xViewRot < 0):
+						xViewRot+=360
+					window.setXRotation(xViewRot)
+
+				if event.key == pg.K_r and not(paused):
+					zViewRot += 1
+					if(zViewRot > 360):
+						zViewRot-=360
+					window.setZRotation(zViewRot)
+				if event.key == pg.K_t and not(paused):
+					zViewRot -= 1
+					if(zViewRot < 0):
+						zViewRot+=360
+					window.setZRotation(zViewRot)
+
 					
 
 	window.cleanup()

@@ -9,7 +9,9 @@ from Geometry import Geometry
 class OpenGLWindow:
 
     def __init__(self):
-        self.viewRot = 0
+        self.yViewRot = 0
+        self.xViewRot = 0
+        self.zViewRot = 0
         self.sun = None
         self.sunRot = 0
         self.earth = None
@@ -23,6 +25,15 @@ class OpenGLWindow:
         self.viewMatrixLoc = None
         self.textures = None
         self.clock = pg.time.Clock()
+
+    def setYRotation(self, rot):
+        self.yViewRot = rot
+
+    def setXRotation(self, rot):
+        self.xViewRot = rot
+
+    def setZRotation(self, rot):
+        self.zViewRot = rot
 
     def setEarthSpeed(self, speed):
         self.earthSpeed = speed
@@ -44,7 +55,6 @@ class OpenGLWindow:
 
     def initGL(self, screen_width=720, screen_height=720):
         pg.init()
-
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_CORE)
 
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MAJOR_VERSION, 3)
@@ -111,13 +121,18 @@ class OpenGLWindow:
     def render(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glUseProgram(self.shader)  # You may not need this line
-        self.viewRot+=0.01
-        if(self.viewRot>360):
-            self.viewRot-=360
         viewMatrix = pyrr.matrix44.create_identity()
         viewMatrix = pyrr.matrix44.multiply(
             m1=viewMatrix,
-            m2=pyrr.matrix44.create_from_y_rotation(np.radians(self.viewRot),dtype=np.float32)
+            m2=pyrr.matrix44.create_from_x_rotation(np.radians(self.xViewRot),dtype=np.float32)
+        )
+        viewMatrix = pyrr.matrix44.multiply(
+            m1=viewMatrix,
+            m2=pyrr.matrix44.create_from_y_rotation(np.radians(self.yViewRot),dtype=np.float32)
+        )
+        viewMatrix = pyrr.matrix44.multiply(
+            m1=viewMatrix,
+            m2=pyrr.matrix44.create_from_z_rotation(np.radians(self.zViewRot),dtype=np.float32)
         )
         viewMatrix = pyrr.matrix44.multiply(
             m1=viewMatrix,
