@@ -12,6 +12,10 @@ class OpenGLWindow:
         self.yViewRot = 0
         self.xViewRot = 0
         self.zViewRot = 0
+        self.isRotY = False
+        self.isRotX = False
+        self.isRotZ = False
+        self.rotSpeed = 0.01
         self.sun = None
         self.sunRot = 0
         self.earth = None
@@ -23,17 +27,26 @@ class OpenGLWindow:
         self.colourLoc = None
         self.modelMatrixLoc = None
         self.viewMatrixLoc = None
+        self.normMxLoc = None
         self.textures = None
         self.clock = pg.time.Clock()
 
+    def reset(self):
+        self.yViewRot = 0
+        self.xViewRot = 0
+        self.zViewRot = 0
+        self.isRotY = False
+        self.isRotX = False
+        self.isRotZ = False
+
     def setYRotation(self, rot):
-        self.yViewRot = rot
+        self.isRotY = rot
 
     def setXRotation(self, rot):
-        self.xViewRot = rot
+        self.isRotX = rot
 
     def setZRotation(self, rot):
-        self.zViewRot = rot
+        self.isRotZ = rot
 
     def setEarthSpeed(self, speed):
         self.earthSpeed = speed
@@ -115,12 +128,32 @@ class OpenGLWindow:
         )
         self.modelMatrixLoc = glGetUniformLocation(self.shader, "model")
         self.viewMatrixLoc = glGetUniformLocation(self.shader, "view")
+        self.normMxLoc = glGetUniformLocation(self.shader, "normMx")
+        glUniform4f(
+            glGetUniformLocation(self.shader, "lposition"), 0,0,0,0
+        )
+        glUniform4f(
+            glGetUniformLocation(self.shader, "ambprod"), 0.1,0.1,0.1,0
+        )
+        glUniform4f(
+            glGetUniformLocation(self.shader, "diffprod"), 0.3,0.3,0.3,0
+        )
+        glUniform4f(
+            glGetUniformLocation(self.shader, "specprod"), 0.01,0.01,0.01,0
+        )
         print("Setup complete!")
 
 
     def render(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glUseProgram(self.shader)  # You may not need this line
+        if(self.isRotX):
+            self.xViewRot += self.rotSpeed
+        if(self.isRotY):
+            self.yViewRot += self.rotSpeed
+        if(self.isRotZ):
+            self.zViewRot += self.rotSpeed
+
         viewMatrix = pyrr.matrix44.create_identity()
         viewMatrix = pyrr.matrix44.multiply(
             m1=viewMatrix,
@@ -145,12 +178,17 @@ class OpenGLWindow:
             m1= modelMatrix,
             m2 = pyrr.matrix44.create_from_scale([0.2,0.2,0.2],dtype=np.float32)
         )
-
         modelMatrix = pyrr.matrix44.multiply(
             m1= modelMatrix,
             m2 = pyrr.matrix44.create_from_translation([0,0,0],dtype=np.float32)
         )
         glUniformMatrix4fv(self.modelMatrixLoc, 1, GL_FALSE, modelMatrix)
+        normMx = pyrr.matrix44.multiply(
+            m1=viewMatrix,
+            m2=modelMatrix
+        )
+        normMx = pyrr.matrix44.inverse(np.matrix.transpose(normMx))
+        glUniformMatrix4fv(self.normMxLoc, 1, GL_FALSE, normMx)
         glUniform3f(self.colourLoc, 1, 1, 1)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.textures[0])
@@ -174,6 +212,12 @@ class OpenGLWindow:
             m2 = pyrr.matrix44.create_from_z_rotation(np.radians(self.earthRot),dtype=np.float32)
         )
         glUniformMatrix4fv(self.modelMatrixLoc, 1, GL_FALSE, modelMatrix)
+        normMx = pyrr.matrix44.multiply(
+            m1=viewMatrix,
+            m2=modelMatrix
+        )
+        normMx = pyrr.matrix44.inverse(np.matrix.transpose(normMx))
+        glUniformMatrix4fv(self.normMxLoc, 1, GL_FALSE, normMx)
         glUniform3f(self.colourLoc, 1,1,1)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.textures[1])
@@ -208,6 +252,12 @@ class OpenGLWindow:
             m2 = pyrr.matrix44.create_from_z_rotation(np.radians(self.earthRot),dtype=np.float32)
         )
         glUniformMatrix4fv(self.modelMatrixLoc, 1, GL_FALSE, modelMatrix)
+        normMx = pyrr.matrix44.multiply(
+            m1=viewMatrix,
+            m2=modelMatrix
+        )
+        normMx = pyrr.matrix44.inverse(np.matrix.transpose(normMx))
+        glUniformMatrix4fv(self.normMxLoc, 1, GL_FALSE, normMx)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.textures[2])
         glUniform3f(self.colourLoc, 1,1,1)
